@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ringring // webring</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0e0e0e;
+        --fg: #e8e8e0;
+        --dim: #666;
+        --accent: #c8f060;
+        --border: #222;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "IBM Plex Mono", monospace;
+        line-height: 1.6;
+        padding: 4rem 2rem;
+        max-width: 700px;
+        margin: 0 auto;
+      }
+      header {
+        margin-bottom: 4rem;
+      }
+      h1 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+      }
+      .subtitle {
+        font-size: 0.8rem;
+        color: var(--dim);
+      }
+
+      .section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--dim);
+        margin: 3rem 0 1rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.5rem;
+      }
+
+      #member-list {
+        list-style: none;
+      }
+      .member-item {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 1rem;
+      }
+      .member-index {
+        font-size: 0.7rem;
+        color: var(--dim);
+        padding-top: 0.2rem;
+      }
+      .member-info a {
+        font-size: 1rem;
+        color: var(--fg);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .member-info a:hover {
+        color: var(--accent);
+      }
+      .member-url {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--dim);
+        margin-bottom: 0.4rem;
+      }
+      .member-desc {
+        font-size: 0.8rem;
+        color: #888;
+      }
+
+      .join-box {
+        background: #151515;
+        border: 1px solid var(--border);
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin-top: 2rem;
+      }
+      code {
+        font-size: 0.8rem;
+        color: var(--accent);
+        display: block;
+        background: #000;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+        overflow-x: auto;
+        border: 1px solid #333;
+      }
+      .btn {
+        font-family: inherit;
+        font-size: 0.7rem;
+        background: var(--accent);
+        border: none;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-weight: 600;
+        border-radius: 2px;
+      }
+
+      footer {
+        margin-top: 5rem;
+        font-size: 0.7rem;
+        color: var(--dim);
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>◆ ringring</h1>
+      <p class="subtitle">a minimalist webring. shuffles daily.</p>
+    </header>
+
+    <div class="section-title">Directory</div>
+    <ul id="member-list">
+      <li class="loading">Fetching members...</li>
+    </ul>
+
+    <div class="section-title">How to join</div>
+    <div class="join-box">
+      <p class="subtitle">
+        1. Add your details to <code>members.json</code> via a Pull Request on
+        <a
+          href="https://github.com/razzat008/ringring"
+          style="color: var(--dim)"
+          >GitHub</a
+        >.
+      </p>
+      <p class="subtitle" style="margin-top: 1rem">
+        2. Paste this snippet on your site:
+      </p>
+      <code id="snippet"
+        >&lt;div id="webring"&gt;&lt;/div&gt; &lt;script
+        src="https://ringring.rajatdahal.com.np/webring.js"&gt;&lt;/script&gt;</code
+      >
+      <button class="btn" onclick="copySnippet()">Copy Snippet</button>
+    </div>
+
+    <footer>
+      <span id="count"></span>
+      <span>resets at midnight</span>
+    </footer>
+
+    <script>
+      function copySnippet() {
+        const text = document.getElementById("snippet").innerText;
+        navigator.clipboard.writeText(text);
+        alert("Snippet copied to clipboard!");
+      }
+
+      // Shuffle logic for index
+      fetch("members.json")
+        .then((r) => r.json())
+        .then((members) => {
+          const d = new Date();
+          const seed =
+            d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+          let s = seed;
+          const rand = () => {
+            s = (s * 1664525 + 1013904223) & 0xffffffff;
+            return (s >>> 0) / 0xffffffff;
+          };
+
+          const ordered = [...members];
+          for (let i = ordered.length - 1; i > 0; i--) {
+            const j = Math.floor(rand() * (i + 1));
+            [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+          }
+
+          const ul = document.getElementById("member-list");
+          ul.innerHTML = ordered
+            .map(
+              (m, i) => `
+        <li class="member-item">
+          <span class="member-index">${String(i + 1).padStart(2, "0")}</span>
+          <div class="member-info">
+            <a href="${m.url}">${m.name}</a>
+            <span class="member-url">${new URL(m.url).hostname}</span>
+            <p class="member-desc">${m.description || ""}</p>
+          </div>
+        </li>
+      `,
+            )
+            .join("");
+          document.getElementById("count").textContent =
+            `${members.length} members`;
+        });
+    </script>
+  </body>
+</html>

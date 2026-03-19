@@ -1,0 +1,113 @@
+(function() {
+  const scriptSrc = document.currentScript.src;
+  const MEMBERS_URL = scriptSrc.replace('webring.js', 'members.json');
+  const HOME_URL = scriptSrc.replace('webring.js', 'index.html');
+  const RING_NAME = "ringring";
+
+  function seededRandom(seed) {
+    let s = seed;
+    return function() {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      return (s >>> 0) / 0xffffffff;
+    };
+  }
+
+  function getDailySeed() {
+    const d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+
+  function shuffle(arr, seed) {
+    const a = [...arr];
+    const rand = seededRandom(seed);
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function getCurrentSiteIndex(members) {
+    const normalize = (url) => {
+      try {
+        const u = new URL(url);
+        return u.hostname.replace(/^www\./, "") + u.pathname.replace(/\/$/, "");
+      } catch { return url; }
+    };
+    const current = normalize(window.location.href);
+    return members.findIndex((m) => normalize(m.url) === current);
+  }
+
+  function render(members) {
+    const el = document.getElementById("webring");
+    if (!el) return;
+
+    const shadow = el.attachShadow({ mode: "open" });
+    const seed = getDailySeed();
+    const ordered = shuffle(members, seed);
+    const idx = getCurrentSiteIndex(ordered);
+
+    const isMember = idx !== -1;
+    const prev = isMember ? ordered[(idx - 1 + ordered.length) % ordered.length] : null;
+    const next = isMember ? ordered[(idx + 1) % ordered.length] : null;
+
+    shadow.innerHTML = `
+      <style>
+        :host {
+          all: initial;
+          --accent: #c8f060;
+          display: inline-block;
+          font-family: 'IBM Plex Mono', monospace;
+        }
+        .container {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          padding: 6px 12px;
+          border: 1px solid rgba(128, 128, 128, 0.3);
+          border-radius: 4px;
+          font-size: 12px;
+          transition: all 0.2s ease;
+          opacity: 0.8;
+          color: inherit;
+        }
+        @media (prefers-color-scheme: dark) {
+          .container { color: #e8e8e0; border-color: rgba(255, 255, 255, 0.1); }
+        }
+        @media (prefers-color-scheme: light) {
+          .container { color: #1a1a18; border-color: rgba(0, 0, 0, 0.1); }
+        }
+        .container:hover {
+          opacity: 1;
+          border-color: var(--accent);
+          background: rgba(200, 240, 96, 0.05);
+        }
+        a { color: inherit; text-decoration: none; transition: color 0.2s; }
+        a:hover { color: var(--accent); }
+        .sep { width: 1px; height: 12px; background: currentColor; opacity: 0.2; }
+        .ring-name { font-weight: 600; text-transform: lowercase; font-size: 11px; letter-spacing: 0.05em; opacity: 0.5; }
+      </style>
+      <nav class="container" aria-label="webring">
+        ${isMember ? `
+          <a href="${prev.url}" title="${prev.name}" rel="prev">←</a>
+          <div class="sep"></div>
+          <a href="${HOME_URL}" class="ring-name">${RING_NAME}</a>
+          <div class="sep"></div>
+          <a href="${next.url}" title="${next.name}" rel="next">→</a>
+        ` : `
+          <a href="${HOME_URL}" class="ring-name">${RING_NAME}</a>
+          <div class="sep"></div>
+          <a href="${ordered[0].url}">discover →</a>
+        `}
+      </nav>
+    `;
+  }
+
+  fetch(MEMBERS_URL)
+    .then(r => r.json())
+    .then(render)
+    .catch(() => {
+      const el = document.getElementById("webring");
+      if (el) el.style.display = "none";
+    });
+})();
