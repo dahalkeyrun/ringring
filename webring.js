@@ -62,11 +62,11 @@
         .container {
           display: inline-flex;
           align-items: center;
-          gap: 12px;
-          padding: 6px 12px;
+          gap: 16px;
+          padding: 10px 20px;
           border: 1px solid rgba(128, 128, 128, 0.3);
-          border-radius: 4px;
-          font-size: 12px;
+          border-radius: 6px;
+          font-size: 14px;
           transition: all 0.2s ease;
           opacity: 0.8;
           color: inherit;
@@ -85,7 +85,7 @@
         a { color: inherit; text-decoration: none; transition: color 0.2s; }
         a:hover { color: var(--accent); }
         .sep { width: 1px; height: 12px; background: currentColor; opacity: 0.2; }
-        .ring-name { font-weight: 600; text-transform: lowercase; font-size: 11px; letter-spacing: 0.05em; opacity: 0.5; }
+        .ring-name { font-weight: 600; text-transform: lowercase; font-size: 13px; letter-spacing: 0.05em; opacity: 0.5; }
       </style>
       <nav class="container" aria-label="webring">
         ${isMember ? `
