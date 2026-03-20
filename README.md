@@ -21,7 +21,7 @@ Why??\
     ```
     *Note: Please include the trailing slash `/` in your URL for consistent matching.*
 
-3. Once merged, add the widget to your site. Follow these [steps to add widget.](#adding-the-widget)
+3. Add the widget to your site. Follow these [steps to add widget.](#adding-the-widget)
 4. **Submit a Pull Request**. Our GitHub Action will automatically validate your JSON.
 
    ***Note: Widget should look something like this in your site:***
